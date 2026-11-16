@@ -135,6 +135,12 @@ FUZZ_TARGETS :=       \
 .PHONY: all clean cleanall
 all: libregression.a $(FUZZ_TARGETS)
 
+# Each link recipe below consumes $(LIB_FUZZING_ENGINE) without declaring it,
+# so `make -j libregression.a all` (as driven by fuzz.py, MFLAGS defaults
+# to -j) can link before the archive exists and fail with
+# "no such file or directory: 'libregression.a'". Serialize explicitly.
+$(FUZZ_TARGETS): $(LIB_FUZZING_ENGINE)
+
 rt_lib_common_%.o: $(LIB_SRCDIR)/common/%.c
 	$(CC) $(FUZZ_CPPFLAGS) $(FUZZ_CFLAGS) $(FUZZ_ROUND_TRIP_FLAGS) $< -c -o $@
 
